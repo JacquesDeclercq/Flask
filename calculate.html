@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Calculate Page{% endblock %}
+
+{% block content %}
+	{% with messages = get_flashed_messages() %}
+		{% if messages %}
+			{% for msg in messages %}
+				<p>{{msg}}</p>
+			{%endfor%}
+		{% endif%}
+	{% endwith %}
+<form action="#" method="post" name ="salary">
+	<p>Salary:</p>
+	<p><input type="text" name="salary" /></p>
+    	<p>Bonus:</p>
+	<p><input type="text" name="bonus" /></p>
+    	<p>Taxes:</p>
+	<p><input type="text" name="taxes" /></p>
+	<p><input type="submit" value="submit"/></p>
+</form>
+{% endblock %}
