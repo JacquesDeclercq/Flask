@@ -1,13 +1,14 @@
 from flask import Flask, render_template, url_for, redirect, request, jsonify, session, flash
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import select, update, delete, values
+from sqlalchemy import select, update, delete, values, create_engine
 from typing import Callable
+
 from datetime import timedelta
 
 
 app = Flask(__name__)
 app.secret_key = "BeCode"
-app.config['SQLALCHEMY_DATABASE_URI']= 'sqlite:///users.sqlite3'
+app.config['SQLALCHEMY_DATABASE_URI']= 'sqlite:///users'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.permanent_session_lifetime = timedelta(minutes = 1)
 
@@ -23,15 +24,15 @@ class Users(db.Model):
     id = db.Column("id", db.Integer, primary_key = True)  #("id" to give name, db.Integer, primary_key = True)
     name = db.Column( db.String(100))
     email = db.Column(db.String(100))
+    salary = db.Column(db.Integer, nullable = True)
 
-    def __init__(self,name, email):
+    def __init__(self,name, email, salary):
         self.name = name
         self.email = email
+        self.salary = salary
 
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db' ## /// is a relative path, //// absolute path
 #db = SQLAlchemy(app)
-
-
 #class todo(db.Model):
 #    id = db.Column(db.Integer, primary_key = True)
 #    content = db.Column(db.String(200), nullable = False) ## makes sure the entry is not empty
@@ -54,9 +55,10 @@ def login():
         if found_user:
             session["email"] = found_user.email
         else:
-            usr = Users(user, "")
+            usr = Users(user, email ="", salary = 0)
             db.session.add(usr)
             db.session.commit() #you commit to save you can rollback to previous state
+            flash("Login Succesful! if you haven't, don't forget to add your e-mail ;)", "info")
 
         flash("Login Succesful!", "info")
         return redirect(url_for("user"))
@@ -121,6 +123,19 @@ def admin():
 
 @app.route('/calculate', methods = ['POST','GET'])
 def calcul():
+    if "user" in session:
+        user = session["user"]
+        if request.method == 'POST':
+            salary_input = int(request.form["salary"])
+            bonus_input = int(request.form["bonus"])
+            taxes_input = int(request.form["taxes"])
+            result = salary_input + bonus_input - taxes_input
+            session["salary"] = result
+            found_user = Users.query.filter_by(name = user ).first()
+            found_user.salary = result
+            db.session.commit()
+            flash("Salary was Saved - Check the View User tab For More Info", "info")
+
 #    if request.method == 'POST':
 #        data = request.json
 #        if type(data['salary']) != int or type(data['bonus']) != int or type(data['taxes']) != int:
